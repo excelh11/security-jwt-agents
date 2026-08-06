@@ -1,0 +1,155 @@
+package com.securityjwt.security.filter;
+
+import static org.junit.jupiter.api.Assertions.*;
+
+import java.nio.charset.StandardCharsets;
+import java.util.Base64;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
+import org.springframework.mock.web.MockFilterChain;
+import org.springframework.mock.web.MockHttpServletRequest;
+import org.springframework.mock.web.MockHttpServletResponse;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+
+import com.securityjwt.dto.MemberDTO;
+import com.securityjwt.util.JWTUtil;
+
+/**
+ * 필터는 Mock 객체로 검증한다 — 스프링 컨텍스트도 DB도 필요 없다.
+ *
+ * MockFilterChain 은 doFilter 가 호출되면 request/response 를 보관한다.
+ * chain.getRequest() 가 null 이면 체인이 중단됐다는 뜻이다.
+ */
+public class JWTCheckFilterTests {
+
+  private final JWTCheckFilter filter = new JWTCheckFilter();
+
+  @AfterEach
+  public void clear() {
+    SecurityContextHolder.clearContext(); // 테스트 간 인증 상태 누수 방지
+  }
+
+  private String accessToken() {
+    return JWTUtil.generateToken(Map.of(
+        "email", "user1@aaa.com",
+        "nickname", "USER1",
+        "social", false,
+        "roleNames", List.of("USER")), 10);
+  }
+
+  @Test
+  public void 정상토큰이면_SecurityContext에_인증이_저장된다() throws Exception {
+
+    MockHttpServletRequest request = new MockHttpServletRequest("GET", "/api/sample/user");
+    request.addHeader("Authorization", "Bearer " + accessToken());
+    MockFilterChain chain = new MockFilterChain();
+
+    filter.doFilter(request, new MockHttpServletResponse(), chain);
+
+    Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+
+    assertNotNull(auth);
+    assertEquals("user1@aaa.com", ((MemberDTO) auth.getPrincipal()).getEmail());
+    assertNotNull(chain.getRequest(), "체인이 진행됐어야 한다");
+    assertNull(auth.getCredentials(), "인증이 끝난 뒤 자격증명을 들고 있으면 안 된다");
+  }
+
+  @Test
+  public void claims에_비밀번호가_실리지_않는다() {
+
+    MemberDTO memberDTO = new MemberDTO(
+        "user1@aaa.com", "$2a$10$해시", "USER1", false, List.of("USER"));
+
+    Map<String, Object> claims = memberDTO.getClaims();
+
+    assertFalse(claims.containsKey("pw"), "pw 는 JWT payload 에서 그대로 읽힌다. 넣으면 안 된다");
+    assertEquals(Set.of("email", "nickname", "social", "roleNames"), claims.keySet());
+  }
+
+  @Test
+  public void 발급된_토큰의_payload를_디코딩해도_해시가_없다() {
+
+    String token = JWTUtil.generateToken(
+        new MemberDTO("user1@aaa.com", "$2a$10$해시", "USER1", false, List.of("USER")).getClaims(), 10);
+
+    String payload = new String(
+        Base64.getUrlDecoder().decode(token.split("\\.")[1]), StandardCharsets.UTF_8);
+
+    assertFalse(payload.contains("$2a$10$"), "payload: " + payload);
+  }
+
+  @Test
+  public void 토큰이_없으면_ERROR_ACCESS_TOKEN을_반환하고_체인을_중단한다() throws Exception {
+
+    MockHttpServletRequest request = new MockHttpServletRequest("GET", "/api/sample/user");
+    MockHttpServletResponse response = new MockHttpServletResponse();
+    MockFilterChain chain = new MockFilterChain();
+
+    filter.doFilter(request, response, chain);
+
+    assertTrue(response.getContentAsString().contains("ERROR_ACCESS_TOKEN"));
+    assertNull(chain.getRequest(), "컨트롤러로 넘어가면 안 된다");
+    assertNull(SecurityContextHolder.getContext().getAuthentication());
+    assertEquals(401, response.getStatus(), "인증 실패는 401로 나가야 한다");
+  }
+
+  @Test
+  public void Bearer_접두어가_없으면_401로_거부한다() throws Exception {
+
+    MockHttpServletRequest request = new MockHttpServletRequest("GET", "/api/sample/user");
+    request.addHeader("Authorization", accessToken()); // "Bearer " 를 빼먹은 경우
+    MockHttpServletResponse response = new MockHttpServletResponse();
+    MockFilterChain chain = new MockFilterChain();
+
+    filter.doFilter(request, response, chain);
+
+    assertEquals(401, response.getStatus());
+    assertTrue(response.getContentAsString().contains("ERROR_ACCESS_TOKEN"));
+    assertNull(chain.getRequest());
+  }
+
+  @Test
+  public void 위조된_토큰이면_거부한다() throws Exception {
+
+    MockHttpServletRequest request = new MockHttpServletRequest("GET", "/api/sample/user");
+    request.addHeader("Authorization", "Bearer " + accessToken() + "tampered");
+    MockHttpServletResponse response = new MockHttpServletResponse();
+    MockFilterChain chain = new MockFilterChain();
+
+    filter.doFilter(request, response, chain);
+
+    assertEquals(401, response.getStatus());
+    assertTrue(response.getContentAsString().contains("ERROR_ACCESS_TOKEN"));
+    assertNull(chain.getRequest());
+  }
+
+  @Test
+  public void 제외경로는_토큰없이도_통과한다() throws Exception {
+
+    for (String uri : List.of("/api/member/login", "/api/member/refresh", "/api/sample/public")) {
+
+      MockFilterChain chain = new MockFilterChain();
+
+      filter.doFilter(new MockHttpServletRequest("GET", uri),
+          new MockHttpServletResponse(), chain);
+
+      assertNotNull(chain.getRequest(), uri + " 는 통과해야 한다");
+    }
+  }
+
+  @Test
+  public void OPTIONS_프리플라이트는_통과한다() throws Exception {
+
+    MockFilterChain chain = new MockFilterChain();
+
+    filter.doFilter(new MockHttpServletRequest("OPTIONS", "/api/sample/user"),
+        new MockHttpServletResponse(), chain);
+
+    assertNotNull(chain.getRequest(), "CORS preflight는 검사 없이 통과해야 한다");
+  }
+}

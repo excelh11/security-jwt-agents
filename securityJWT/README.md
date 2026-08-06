@@ -114,7 +114,7 @@ npm run dev                    # http://localhost:5173
 
 | 문서 | 내용 |
 |---|---|
-| [docs/1-SPEC.md](docs/1-SPEC.md) | ① **필수 기능에 대한 설명** — F1~F8, 에러 코드 계약, 알려진 결함 K1~K8 |
+| [docs/1-SPEC.md](docs/1-SPEC.md) | ① **필수 기능에 대한 설명** — `F1~F8`, 에러 코드 계약, 알려진 결함 `K1~K8` |
 | [docs/2-PLAN.md](docs/2-PLAN.md) | ② **기능 구현에 필요한 기술 목록** — 사용/금지 API, 필터 흐름, 설계 규칙 |
 | [docs/3-TEST.md](docs/3-TEST.md) | ③ **테스트하는 방법** — 테스트 코드, curl, 회귀 체크리스트 20항목 |
 

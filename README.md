@@ -176,7 +176,7 @@ AWS Kiro, GitHub Spec Kit 등이 같은 문제를 풀고 있다.
 
 | 문서                                           | 내용                                               |
 | ---------------------------------------------- | -------------------------------------------------- |
-| [`docs/1-SPEC.md`](securityJWT/docs/1-SPEC.md) | 기능 명세 F1~F8, 에러 코드 계약, 알려진 결함 K1~K8 |
+| [`docs/1-SPEC.md`](securityJWT/docs/1-SPEC.md) | 기능 명세 `F1~F8`, 에러 코드 계약, 알려진 결함 `K1~K8` |
 | [`docs/2-PLAN.md`](securityJWT/docs/2-PLAN.md) | 사용 가능한 기술, 금지 API, 요청 처리 흐름         |
 | [`docs/3-TEST.md`](securityJWT/docs/3-TEST.md) | 테스트 코드 템플릿, 회귀 체크리스트                |
 

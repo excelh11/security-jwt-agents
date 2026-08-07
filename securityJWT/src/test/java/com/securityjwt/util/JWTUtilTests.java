@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import java.util.List;
 import java.util.Map;
 
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -26,7 +27,8 @@ public class JWTUtilTests {
   }
 
   @Test
-  public void 토큰_생성후_검증하면_claims가_그대로_돌아온다() {
+  @DisplayName("토큰 생성 후 검증하면 claims가 그대로 돌아온다")
+  public void generateAndValidateToken() {
 
     String token = JWTUtil.generateToken(sampleClaims(), 10);
 
@@ -38,7 +40,8 @@ public class JWTUtilTests {
   }
 
   @Test
-  public void 만료된_토큰은_Expired_예외를_던진다() {
+  @DisplayName("만료된 토큰은 Expired 예외를 던진다")
+  public void expiredToken() {
 
     // Thread.sleep 대신 음수 min 으로 즉시 만료시킨다
     String token = JWTUtil.generateToken(sampleClaims(), -1);
@@ -50,7 +53,8 @@ public class JWTUtilTests {
   }
 
   @Test
-  public void 위조된_토큰은_예외를_던진다() {
+  @DisplayName("위조된 토큰은 예외를 던진다")
+  public void tamperedToken() {
 
     String token = JWTUtil.generateToken(sampleClaims(), 10) + "tampered";
 
@@ -58,7 +62,8 @@ public class JWTUtilTests {
   }
 
   @Test
-  public void 형식이_아닌_문자열은_MalFormed() {
+  @DisplayName("형식이 아닌 문자열은 MalFormed")
+  public void malformedToken() {
 
     CustomJWTException ex = assertThrows(CustomJWTException.class,
         () -> JWTUtil.validateToken("this-is-not-a-jwt"));

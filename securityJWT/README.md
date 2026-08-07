@@ -1,4 +1,4 @@
-# securityJWT
+# Security + JWT 구현할 수 있는 Agent
 
 Spring Boot 3.5 + Spring Security 6 + JWT **인증/인가만** 남긴 학습·검증용 백엔드.
 원본 쇼핑몰 프로젝트에서 Security/JWT에 필요한 소스만 가져왔다. 상품·장바구니·주문 기능은 없다.

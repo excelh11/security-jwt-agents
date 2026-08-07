@@ -2,6 +2,7 @@ package com.securityjwt.repository;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -46,7 +47,8 @@ public class MemberRepositoryTests {
    * 이미 있으면 덮어쓴다 — 여러 번 돌려도 안전하다.
    */
   @Test
-  public void 회원_2명_생성() {
+  @DisplayName("회원 2명 생성")
+  public void createMembers() {
 
     // ── 일반 회원 ──
     Member user = Member.builder()
@@ -83,7 +85,8 @@ public class MemberRepositoryTests {
    */
   @Test
   @Transactional
-  public void 회원_권한까지_조회된다() {
+  @DisplayName("회원 권한까지 함께 조회된다")
+  public void getWithRoles() {
 
     Member member = memberRepository.getWithRoles(USER_EMAIL);
 
@@ -100,7 +103,8 @@ public class MemberRepositoryTests {
    * 이게 깨지면 로그인이 항상 ERROR_LOGIN 이 된다.
    */
   @Test
-  public void 비밀번호가_BCrypt로_저장된다() {
+  @DisplayName("비밀번호가 BCrypt로 저장된다")
+  public void verifyPasswordEncoding() {
 
     Member member = memberRepository.getWithRoles(USER_EMAIL);
 

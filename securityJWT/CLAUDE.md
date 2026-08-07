@@ -132,6 +132,4 @@ DB 없이 돌릴 수 있는 테스트 — Security/JWT를 건드리면 최소 �
 ---
 
 ## 참고
-
-- **git 저장소로 만들 때** `securityJWT`와 `../front-sjwt` 두 폴더만 올린다.
 - `docs/1-SPEC.md`의 명세가 바뀌면 **코드보다 문서를 먼저** 고친다.

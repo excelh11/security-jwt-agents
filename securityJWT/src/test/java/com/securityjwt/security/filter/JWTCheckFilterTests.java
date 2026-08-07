@@ -9,6 +9,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.mock.web.MockFilterChain;
 import org.springframework.mock.web.MockHttpServletRequest;
@@ -43,7 +44,8 @@ public class JWTCheckFilterTests {
   }
 
   @Test
-  public void 정상토큰이면_SecurityContext에_인증이_저장된다() throws Exception {
+  @DisplayName("정상 토큰이면 SecurityContext에 인증이 저장된다")
+  public void validToken() throws Exception {
 
     MockHttpServletRequest request = new MockHttpServletRequest("GET", "/api/sample/user");
     request.addHeader("Authorization", "Bearer " + accessToken());
@@ -60,7 +62,8 @@ public class JWTCheckFilterTests {
   }
 
   @Test
-  public void claims에_비밀번호가_실리지_않는다() {
+  @DisplayName("claims에 비밀번호가 실리지 않는다")
+  public void claimsExcludePassword() {
 
     MemberDTO memberDTO = new MemberDTO(
         "user1@aaa.com", "$2a$10$해시", "USER1", false, List.of("USER"));
@@ -72,7 +75,8 @@ public class JWTCheckFilterTests {
   }
 
   @Test
-  public void 발급된_토큰의_payload를_디코딩해도_해시가_없다() {
+  @DisplayName("발급된 토큰의 payload를 디코딩해도 해시가 없다")
+  public void payloadExcludesHash() {
 
     String token = JWTUtil.generateToken(
         new MemberDTO("user1@aaa.com", "$2a$10$해시", "USER1", false, List.of("USER")).getClaims(), 10);
@@ -84,7 +88,8 @@ public class JWTCheckFilterTests {
   }
 
   @Test
-  public void 토큰이_없으면_ERROR_ACCESS_TOKEN을_반환하고_체인을_중단한다() throws Exception {
+  @DisplayName("토큰이 없으면 ERROR_ACCESS_TOKEN을 반환하고 체인을 중단한다")
+  public void missingToken() throws Exception {
 
     MockHttpServletRequest request = new MockHttpServletRequest("GET", "/api/sample/user");
     MockHttpServletResponse response = new MockHttpServletResponse();
@@ -99,7 +104,8 @@ public class JWTCheckFilterTests {
   }
 
   @Test
-  public void Bearer_접두어가_없으면_401로_거부한다() throws Exception {
+  @DisplayName("Bearer 접두어가 없으면 401로 거부한다")
+  public void missingBearerPrefix() throws Exception {
 
     MockHttpServletRequest request = new MockHttpServletRequest("GET", "/api/sample/user");
     request.addHeader("Authorization", accessToken()); // "Bearer " 를 빼먹은 경우
@@ -114,7 +120,8 @@ public class JWTCheckFilterTests {
   }
 
   @Test
-  public void 위조된_토큰이면_거부한다() throws Exception {
+  @DisplayName("위조된 토큰이면 거부한다")
+  public void tamperedToken() throws Exception {
 
     MockHttpServletRequest request = new MockHttpServletRequest("GET", "/api/sample/user");
     request.addHeader("Authorization", "Bearer " + accessToken() + "tampered");
@@ -129,7 +136,8 @@ public class JWTCheckFilterTests {
   }
 
   @Test
-  public void 제외경로는_토큰없이도_통과한다() throws Exception {
+  @DisplayName("제외경로는 토큰없이도 통과한다")
+  public void excludedPaths() throws Exception {
 
     for (String uri : List.of("/api/member/login", "/api/member/refresh", "/api/sample/public")) {
 
@@ -143,7 +151,8 @@ public class JWTCheckFilterTests {
   }
 
   @Test
-  public void OPTIONS_프리플라이트는_통과한다() throws Exception {
+  @DisplayName("OPTIONS 프리플라이트는 통과한다")
+  public void optionsPreflight() throws Exception {
 
     MockFilterChain chain = new MockFilterChain();
 
